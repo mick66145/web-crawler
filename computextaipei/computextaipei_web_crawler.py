@@ -34,6 +34,7 @@ class ComputextaipeiWebCrawler:
     def getBatchInfos(self, urls: Iterable[str], output_file=False):
         data = []
         for url in urls:
+            print(url)
             self.driver.get(url)
             infoItems = self.__getPageInfos()
             for infoItem in infoItems:
