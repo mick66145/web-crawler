@@ -1,7 +1,7 @@
 from flask import jsonify
 from flask_restful import Resource
 
-from computextaipei.computextaipei_web_crawler import GoogleMapReviews
+from computextaipei.computextaipei_web_crawler import ComputextaipeiWebCrawler
 
 
 class Computextaipei(Resource):
@@ -19,7 +19,7 @@ class Computextaipei(Resource):
 
     def get(self):
         result = []
-        computextaipeiWebCrawler = GoogleMapReviews()
+        computextaipeiWebCrawler = ComputextaipeiWebCrawler()
         print(111)
         # computextaipeiWebCrawler.getBatchInfos(
         #     [
