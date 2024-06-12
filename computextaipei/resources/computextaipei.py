@@ -1,6 +1,7 @@
 from flask import jsonify
 from flask_restful import Resource
 
+import csv
 from computextaipei.computextaipei_web_crawler import ComputextaipeiWebCrawler
 
 
@@ -18,11 +19,15 @@ class Computextaipei(Resource):
         pass
 
     def get(self):
+        urls = []
+        with open("new-project.csv", newline="", encoding="ISO-8859-1") as csvfile:
+            csv_reader = csv.reader(csvfile)
+            for row in csv_reader:
+                urls.append(row[1])
+
         result = []
         result = self.computextaipeiWebCrawler.getBatchInfos(
-            [
-                "https://www.computextaipei.com.tw/en/exhibitor/CE1F519AF8152C413B18EC96FA84DD5D/info.html?lt=data&vt=country-list&cr=1&cate=TW"
-            ],
+            urls,
             True,
         )
         return jsonify(result)
