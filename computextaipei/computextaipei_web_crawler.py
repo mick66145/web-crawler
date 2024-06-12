@@ -10,81 +10,6 @@ import argparse
 import csv
 
 
-def getArgParser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--url",
-        default="https://www.computextaipei.com.tw/en/exhibitor/CE1F519AF8152C413B18EC96FA84DD5D/info.html",
-        type=str,
-    )
-    parser.add_argument(
-        "--show-ui", default=False, action=argparse.BooleanOptionalAction
-    )
-    return parser
-
-
-def getChromeOptions() -> Options:
-    argParse = getArgParser()
-    args = argParse.parse_args()
-    chrome_options = Options()
-    if not (args.show_ui):
-        chrome_options.add_argument("--headless")  # 啟動Headless 無頭
-        chrome_options.add_argument("--disable-gpu")  # 關閉GPU 避免某些系統或是網頁出錯
-        chrome_options.add_argument("--disable-extensions")
-        chrome_options.add_argument("--disable-infobars")
-        chrome_options.add_argument("--start-maximized")
-        chrome_options.add_argument("--disable-notifications")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-
-    return chrome_options
-
-
-# util function to clean special characters
-def __filter_string(str):
-    strOut = str.replace("\r", " ").replace("\n", " ").replace("\t", " ")
-    return strOut
-
-
-# def infoParse(info):
-#     item = {}
-
-#     # Google評論 ID
-#     try:
-#         info_id = info["data-review-id"]
-#     except Exception as e:
-#         info_id = None
-
-#     # 評論者名稱
-#     try:
-#         info_user_name = info["aria-label"]
-#     except Exception as e:
-#         info_user_name = None
-
-#     # 評分
-#     try:
-#         info_rating = float(
-#             info.find("span", class_="kvMYJc")["aria-label"].split(" ")[0]
-#         )
-#     except Exception as e:
-#         info_rating = None
-
-#     # 評論內容
-#     try:
-#         info_comment = __filter_string(
-#             info.find("div", class_="MyEned").find("span", class_="wiI7pd").text
-#         )
-#     except Exception as e:
-#         info_comment = None
-
-#     item["id"] = info_id
-#     item["user_name"] = info_user_name
-#     item["rating"] = info_rating
-#     item["comment"] = info_comment
-
-#     return item
-
-
 def outputCsv(title, items, fieldnames, file_name="output.csv", delimiter=","):
     with open(file_name, "w", newline="", encoding="utf-8") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=delimiter)
@@ -109,27 +34,25 @@ class ComputextaipeiWebCrawler:
     def getBatchInfos(self, urls: Iterable[str], output_file=False):
         data = []
         for url in urls:
-            print(url)
             self.driver.get(url)
-            soup = BeautifulSoup(self.driver.page_source, "html.parser")
-            # store_name = soup.find("h1", class_="DUwDvf lfPIob").text
             infoItems = self.__getPageInfos()
             for infoItem in infoItems:
-                # data.append(infoItem | {"store_name": store_name})
                 data.append(infoItem)
 
         if output_file:
             file_name = time.strftime("%Y%m%d") + "__output.csv"
             outputCsv(
                 {
-                    "store_name": "店家名稱",
-                    "id": "ID",
-                    "user_name": "使用者名稱",
-                    "rating": "評分",
-                    "comment": "內容",
+                    "info_company_name": "公司名稱",
+                    "info_company_address": "公司地址",
+                    "info_company_link": "公司網址",
                 },
                 data,
-                ["store_name", "id", "user_name", "rating", "comment"],
+                [
+                    "info_company_name",
+                    "info_company_address",
+                    "info_company_link",
+                ],
                 file_name,
             )
 
@@ -154,97 +77,38 @@ class ComputextaipeiWebCrawler:
 
     def __getPageInfos(self):
         soup = BeautifulSoup(self.driver.page_source, "html.parser")
-        reviews = soup.find_all("div", class_="company_info")
-        # info_block = self.driver.find_element(
-        #     By.CSS_SELECTOR, "div[class='m6QErb DxyBCb kA9KIf dS8AEf ']"
-        # )
-        print(reviews)
-
-        # time.sleep(1)
-
-        # # 點擊切換到評論頁
-        # roleButtons = self.driver.find_element(
-        #     By.CSS_SELECTOR, "div[role='tablist']"
-        # ).find_elements(By.TAG_NAME, "button")
-        # for button in roleButtons:
-        #     if button.text == "評論":
-        #         button.click()
-        #         break
-
-        # time.sleep(2)
-
-        # 滾動評論
-        # i = 0
-        # info_block = self.driver.find_element(
-        #     By.CSS_SELECTOR, "div[class='m6QErb DxyBCb kA9KIf dS8AEf ']"
-        # )
-
-        # while i < 4 and info_block.get_attribute(
-        #     "scrollTop"
-        # ) != info_block.get_attribute("scrollHeight"):
-        #     self.driver.execute_script(
-        #         "arguments[0].scrollTop = arguments[0].scrollHeight", info_block
-        #     )
-        #     i += 1
-        #     time.sleep(0.5)
-
-        # time.sleep(1)
-
-        # 點擊所有評論查看更多
-        # showInfoButtons = self.driver.find_elements(
-        #     By.CSS_SELECTOR, "button[jsaction='pane.info.expandInfo']"
-        # )
-        # for button in showInfoButtons:
-        #     button.click()
-
-        # time.sleep(3)
-
-        # soup = BeautifulSoup(self.driver.page_source, "html.parser")
-
-        # infos = soup.find_all("div", class_="jftiEf fontBodyMedium")
+        infos = soup.find_all("div", class_="company_info")
 
         infos_items = []
-        # for index, info in enumerate(infos):
-        #     info_object = self.__infoParse(info=info)
-        #     infos_items.append(info_object)
+        for index, info in enumerate(infos):
+            info_object = self.__infoParse(info=info)
+            infos_items.append(info_object)
 
         return infos_items
 
     def __infoParse(self, info):
         item = {}
-
-        # Google評論 ID
+        # 公司名稱
         try:
-            info_id = info["data-info-id"]
+            info_company_name = info.find("h2").text
         except Exception as e:
-            info_id = None
+            info_company_name = None
 
-        # 評論者名稱
+        # 公司地址
         try:
-            info_user_name = info["aria-label"]
+            info_company_address = info.find_all("li")[0].text
         except Exception as e:
-            info_user_name = None
+            info_company_address = None
 
-        # 評分
+        # 公司網址
         try:
-            info_rating = float(
-                info.find("span", class_="kvMYJc")["aria-label"].split(" ")[0]
-            )
+            info_company_link = info.find_all("li")[1].text
         except Exception as e:
-            info_rating = None
+            info_company_link = None
 
-        # 評論內容
-        try:
-            info_comment = self.__filter_string(
-                info.find("div", class_="MyEned").find("span", class_="wiI7pd").text
-            )
-        except Exception as e:
-            info_comment = None
-
-        item["id"] = info_id
-        item["user_name"] = info_user_name
-        item["rating"] = info_rating
-        item["comment"] = info_comment
+        item["info_company_name"] = info_company_name
+        item["info_company_address"] = info_company_address
+        item["info_company_link"] = info_company_link
 
         return item
 
