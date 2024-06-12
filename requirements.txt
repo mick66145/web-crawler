@@ -1,0 +1,8 @@
+Flask
+flask-restful
+python-dotenv
+mysqlclient
+requests
+bs4
+selenium
+webdriver_manager
